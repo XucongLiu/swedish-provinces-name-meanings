@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Swedish Provinces — Literal Name Meanings</title>
+  <meta name="description" content="An interactive map of Sweden's 25 historical provinces (landskap) with accurate geographic boundaries from Lantmäteriet, showing the literal etymological meanings of their names."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+      --accent:#58a6ff;--accent2:#79c0ff;--gold:#e3b341;
+      --text:#e6edf3;--muted:#8b949e;
+    }
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+    header{text-align:center;padding:1.8rem 1rem 0.4rem}
+    header::after{content:'';display:block;width:70px;height:3px;
+      background:linear-gradient(90deg,var(--accent),var(--gold));
+      margin:.7rem auto 0;border-radius:2px}
+    h1{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,3.5vw,2.6rem);
+      background:linear-gradient(135deg,#e6edf3 30%,var(--gold) 100%);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .sub{font-size:.92rem;color:var(--muted);margin-top:.3rem;font-weight:300}
+
+    .legend{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;
+      padding:.6rem 1rem 0;font-size:.78rem;color:var(--muted)}
+    .li{display:flex;align-items:center;gap:.4rem}
+    .ld{width:11px;height:11px;border-radius:3px}
+
+    .stats{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;
+      padding:.5rem 1rem .3rem}
+    .stat{background:var(--surface);border:1px solid var(--border);border-radius:9px;
+      padding:.4rem .9rem;text-align:center;font-size:.76rem;color:var(--muted)}
+    .stat strong{display:block;font-size:1.1rem;color:var(--text);font-weight:600}
+
+    .layout{display:grid;grid-template-columns:1fr 350px;gap:1.1rem;
+      max-width:1280px;margin:1rem auto 2rem;padding:0 1.1rem}
+    @media(max-width:860px){.layout{grid-template-columns:1fr}}
+
+    /* MAP */
+    .map-wrap{background:var(--surface);border:1px solid var(--border);
+      border-radius:16px;overflow:hidden;position:relative;
+      min-height:600px;display:flex;align-items:center;justify-content:center}
+    #map{width:100%;height:100%;max-height:850px;cursor:grab}
+    #map:active{cursor:grabbing}
+
+    .zctrl{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;z-index:10}
+    .zb{width:30px;height:30px;background:var(--surface2);border:1px solid var(--border);
+      border-radius:7px;color:var(--text);font-size:1rem;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;transition:border-color .2s}
+    .zb:hover{border-color:var(--accent)}
+
+    .hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+      font-size:.72rem;color:var(--muted);background:rgba(13,17,23,.85);
+      padding:.22rem .7rem;border-radius:20px;border:1px solid var(--border);
+      white-space:nowrap;pointer-events:none}
+
+    /* Provinces */
+    .prov{cursor:pointer;stroke:rgba(255,255,255,.12);stroke-width:.4;
+      transition:filter .18s,opacity .18s}
+    .prov:hover{filter:brightness(1.4) drop-shadow(0 0 5px rgba(88,166,255,.6));
+      stroke:rgba(121,192,255,.85);stroke-width:.7}
+    .prov.active{filter:brightness(1.55) drop-shadow(0 0 8px rgba(227,179,65,.85));
+      stroke:var(--gold)!important;stroke-width:1!important}
+    .prov.dim{opacity:.38}
+    .plbl{font-family:'Outfit',sans-serif;font-size:6px;fill:rgba(255,255,255,.6);
+      text-anchor:middle;dominant-baseline:middle;pointer-events:none;user-select:none}
+
+    /* SIDEBAR */
+    .sidebar{display:flex;flex-direction:column;gap:1rem}
+    .dcard{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+      padding:1.35rem;min-height:250px;position:relative;overflow:hidden;transition:border-color .3s}
+    .dcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+      background:linear-gradient(90deg,var(--accent),var(--gold));
+      transform:scaleX(0);transform-origin:left;transition:transform .4s;
+      border-radius:16px 16px 0 0}
+    .dcard.on::before{transform:scaleX(1)}
+    .dcard.on{border-color:rgba(88,166,255,.25)}
+
+    .ph{display:flex;flex-direction:column;align-items:center;justify-content:center;
+      height:100%;gap:.7rem;color:var(--muted);text-align:center}
+    .ph-icon{font-size:2.6rem;opacity:.28}
+    .ph p{font-size:.86rem;max-width:185px;line-height:1.55}
+
+    .pname{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--text);margin-bottom:.18rem}
+    .rtag{display:inline-block;font-size:.68rem;font-weight:600;letter-spacing:.8px;
+      text-transform:uppercase;padding:.16rem .6rem;border-radius:20px;margin-bottom:.85rem}
+    .rg1{background:rgba(45,110,69,.35);color:#6fcf97;border:1px solid rgba(45,110,69,.6)}
+    .rg2{background:rgba(38,78,122,.35);color:#79c0ff;border:1px solid rgba(38,78,122,.6)}
+    .rg3{background:rgba(107,53,34,.35);color:#ffab70;border:1px solid rgba(107,53,34,.6)}
+
+    .mblk{background:var(--surface2);border-radius:9px;padding:.85rem 1rem;
+      margin:.65rem 0;border-left:3px solid var(--gold)}
+    .ml{font-size:.67rem;text-transform:uppercase;letter-spacing:1px;color:var(--gold);font-weight:600;margin-bottom:.28rem}
+    .mv{font-size:1.15rem;font-family:'Playfair Display',serif;font-style:italic;color:var(--text)}
+    .etl{font-size:.67rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600;
+      margin:.75rem 0 .3rem}
+    .ete{font-size:.84rem;color:#c9d1d9;line-height:1.65}
+
+    /* List */
+    .lcard{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:.85rem;flex:1}
+    .lhdr{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+      font-weight:600;padding-bottom:.55rem;border-bottom:1px solid var(--border);margin-bottom:.45rem}
+    .srch{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+      padding:.4rem .7rem;color:var(--text);font-family:'Outfit',sans-serif;font-size:.82rem;
+      margin-bottom:.45rem;outline:none;transition:border-color .2s}
+    .srch:focus{border-color:var(--accent)}
+    .srch::placeholder{color:var(--muted)}
+    .plist{list-style:none;max-height:290px;overflow-y:auto;
+      scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+    .plist li{display:flex;align-items:center;gap:.5rem;padding:.38rem .42rem;
+      border-radius:7px;cursor:pointer;font-size:.81rem;transition:background .12s}
+    .plist li:hover{background:var(--surface2)}
+    .plist li.sel{background:rgba(88,166,255,.1);color:var(--accent2)}
+    .ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .lmean{font-size:.69rem;color:var(--muted);margin-left:auto;max-width:125px;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+
+    /* Tooltip */
+    #tt{position:fixed;background:rgba(22,27,34,.96);border:1px solid var(--accent);
+      border-radius:10px;padding:.52rem .88rem;pointer-events:none;z-index:9999;
+      opacity:0;transform:translateY(4px);transition:opacity .14s,transform .14s;
+      max-width:205px;backdrop-filter:blur(8px)}
+    #tt.on{opacity:1;transform:translateY(0)}
+    .tn{font-weight:600;font-size:.9rem;color:var(--text)}
+    .tm{font-size:.78rem;color:var(--gold);font-style:italic;margin-top:.07rem}
+
+    /* Data credit */
+    .credit{text-align:center;padding:.4rem 1rem 1.2rem;font-size:.7rem;color:var(--muted)}
+    .credit a{color:var(--accent);text-decoration:none}
+    .credit a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+<header>
+  <h1>Swedish Provinces</h1>
+  <p class="sub">Hover or click a province to reveal the literal meaning of its name</p>
+</header>
+<div class="legend">
+  <div class="li"><div class="ld" style="background:#2d6e45"></div>Götaland — Land of the Geats</div>
+  <div class="li"><div class="ld" style="background:#264e7a"></div>Svealand — Land of the Svear</div>
+  <div class="li"><div class="ld" style="background:#6b3522"></div>Norrland — Northern Land</div>
+</div>
+<div class="stats">
+  <div class="stat"><strong>25</strong>Provinces</div>
+  <div class="stat"><strong>~1000 yrs</strong>of names</div>
+  <div class="stat"><strong>3</strong>Great regions</div>
+</div>
+<div class="layout">
+  <div class="map-wrap">
+    <div class="zctrl">
+      <button class="zb" id="zi">+</button>
+      <button class="zb" id="zo">−</button>
+      <button class="zb" id="zr" style="font-size:.7rem">↺</button>
+    </div>
+    <svg id="map" viewBox="0 0 500 900" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg" cx="50%" cy="50%" r="70%">
+          <stop offset="0%" stop-color="#1a2235"/>
+          <stop offset="100%" stop-color="#0d1117"/>
+        </radialGradient>
+      </defs>
+      <rect width="500" height="900" fill="url(#bg)"/>
+      <g id="pg"></g>
+    </svg>
+    <span class="hint">🖱 Hover to preview · Click to explore · Scroll to zoom</span>
+  </div>
+  <div class="sidebar">
+    <div class="dcard" id="dc">
+      <div class="ph" id="ph">
+        <div class="ph-icon">🗺️</div>
+        <p>Click a province on the map to discover the literal meaning of its name</p>
+      </div>
+      <div id="di" style="display:none">
+        <div class="pname" id="dn"></div>
+        <span class="rtag" id="dr"></span>
+        <div class="mblk">
+          <div class="ml">Literal Meaning</div>
+          <div class="mv" id="dm"></div>
+        </div>
+        <div class="etl">Etymology</div>
+        <div class="ete" id="de"></div>
+      </div>
+    </div>
+    <div class="lcard">
+      <div class="lhdr">All 25 Provinces</div>
+      <input class="srch" id="srch" type="search" placeholder="Search provinces…"/>
+      <ul class="plist" id="pl"></ul>
+    </div>
+  </div>
+</div>
+<div class="credit">
+  Geographic data: <a href="https://github.com/perliedman/svenska-landskap" target="_blank">perliedman/svenska-landskap</a>
+  (Lantmäteriet, CC0) · Processed with QGIS 3.44 GDAL/OGR, SWEREF99 TM projection
+</div>
+<div id="tt"><div class="tn" id="ttn"></div><div class="tm" id="ttm"></div></div>
+
+<script>
+const PROVS = [
+    {
+        "id": "skane",
+        "name": "Skåne",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 146.9,
+        "cy": 843.8,
+        "path": "M 106.8,821.1 L 115.9,826.1 L 120.0,824.0 L 113.1,815.2 L 115.1,810.8 L 132.7,820.3 L 142.1,814.0 L 161.7,811.8 L 164.0,807.8 L 178.6,812.5 L 174.2,822.4 L 180.3,827.3 L 180.7,835.2 L 167.9,851.8 L 173.0,869.5 L 166.7,879.6 L 150.3,876.9 L 136.4,882.0 L 123.6,877.8 L 121.5,867.4 L 126.9,859.6 L 106.8,821.1 Z",
+        "meaning": "\"Scandinavia's Origin / Hazardous Shore\"",
+        "etymology": "Linked to proto-Germanic *Skaðin-awjā, possibly from skaðan (damage/danger) — referring to the treacherous coastal sandbanks near Falsterbo. This same root gave rise to the name 'Scandinavia' itself."
+    },
+    {
+        "id": "blekinge",
+        "name": "Blekinge",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 202.2,
+        "cy": 823.4,
+        "path": "M 185.6,841.3 L 179.4,838.1 L 180.3,827.3 L 174.2,822.4 L 178.6,812.5 L 190.6,818.9 L 195.9,813.3 L 214.4,809.8 L 224.7,821.0 L 232.2,821.0 L 225.7,835.4 L 216.3,829.1 L 208.5,832.7 L 184.8,831.3 L 185.6,841.3 Z",
+        "meaning": "\"The Shining / Pale Land\"",
+        "etymology": "From Old Norse bleikr (pale, shining, whitish). Likely describing the glistening pale appearance of the sea and its light-reflecting coastline. Some scholars connect it to bleaching grounds along the shore."
+    },
+    {
+        "id": "oland",
+        "name": "Öland",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 253.8,
+        "cy": 791.0,
+        "path": "M 245.0,827.6 L 244.5,804.2 L 265.0,755.3 L 267.3,757.6 L 245.0,827.6 Z",
+        "meaning": "\"Island Land\"",
+        "etymology": "Simply ö (island) + land. Öland is a long, narrow island off Sweden's southeast coast — quite literally an island-land. Its unique limestone plain (alvar) is a UNESCO World Heritage Site."
+    },
+    {
+        "id": "halland",
+        "name": "Halland",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 118.9,
+        "cy": 780.8,
+        "path": "M 141.8,811.5 L 133.4,820.1 L 121.6,816.5 L 122.6,800.3 L 117.0,800.0 L 112.4,787.9 L 104.7,782.0 L 97.4,750.0 L 93.5,755.2 L 90.9,750.0 L 92.0,741.2 L 102.3,737.7 L 107.9,750.0 L 107.7,762.4 L 119.6,760.7 L 130.7,768.0 L 141.8,811.5 Z",
+        "meaning": "\"Stony Slopes\"",
+        "etymology": "From Old Norse hallr (slope, flat stone, rocky terrain). The name perfectly captures the hilly, rocky coastal landscape along the Kattegat sea."
+    },
+    {
+        "id": "smaland",
+        "name": "Småland",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 195.4,
+        "cy": 765.1,
+        "path": "M 130.0,769.9 L 151.3,743.4 L 153.1,725.5 L 162.4,728.2 L 167.3,722.9 L 168.9,729.5 L 170.1,714.3 L 176.2,704.2 L 189.1,711.0 L 194.7,706.7 L 199.7,733.9 L 209.6,734.7 L 215.4,725.3 L 227.0,728.3 L 230.9,723.9 L 228.2,711.2 L 231.8,710.1 L 232.0,701.1 L 239.2,698.8 L 252.3,706.5 L 253.6,714.7 L 249.1,716.4 L 254.4,722.7 L 245.1,717.0 L 252.3,731.8 L 242.7,722.4 L 252.8,734.3 L 251.9,752.4 L 245.1,761.7 L 249.5,775.4 L 230.7,822.4 L 214.4,809.8 L 195.9,813.3 L 190.6,818.9 L 164.2,807.8 L 161.7,811.8 L 143.4,815.4 L 130.0,769.9 Z",
+        "meaning": "\"Small Lands\"",
+        "etymology": "Literally smá (small) + land (lands, plural). The province was historically a patchwork of several small independent territories — Värend, Finnveden, Njudung, and Möre — bundled together into one name."
+    },
+    {
+        "id": "gotland",
+        "name": "Gotland",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 313.8,
+        "cy": 745.2,
+        "path": "M 319.4,717.6 L 322.0,722.0 L 324.7,717.5 L 330.0,723.0 L 323.0,731.2 L 321.3,760.2 L 311.0,767.5 L 308.4,780.0 L 303.2,781.8 L 307.5,771.0 L 303.4,767.4 L 300.2,743.9 L 319.4,717.6 Z M 339.6,714.4 L 334.0,716.5 L 333.1,722.1 L 329.9,718.7 L 331.6,713.7 L 339.6,714.4 Z",
+        "meaning": "\"Land of the Gutar\"",
+        "etymology": "Named after the Gutar (Gutes), the Norse tribe who inhabited the island. Gut-land = 'land of the Gutes.' The Gutar had their own unique law code, dialect, and identity, distinct from mainland Swedes, for centuries."
+    },
+    {
+        "id": "vastergotland",
+        "name": "Västergötland",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 138.4,
+        "cy": 709.2,
+        "path": "M 101.8,737.6 L 92.2,741.3 L 91.2,733.0 L 87.7,733.1 L 91.7,727.5 L 94.7,731.2 L 100.0,716.1 L 104.0,698.3 L 100.0,694.7 L 101.7,690.0 L 121.6,679.5 L 120.6,683.9 L 126.4,682.6 L 125.2,678.4 L 135.2,668.1 L 139.0,670.0 L 134.8,682.7 L 138.7,683.8 L 141.2,677.3 L 151.8,671.1 L 150.2,662.8 L 161.3,657.3 L 163.2,660.1 L 161.3,651.3 L 166.8,655.5 L 179.0,653.3 L 186.9,674.2 L 171.4,704.2 L 174.9,705.5 L 162.4,728.2 L 153.1,725.5 L 151.3,743.4 L 131.4,768.6 L 119.6,760.7 L 107.7,762.4 L 106.0,741.9 L 101.8,737.6 Z",
+        "meaning": "\"West Gothland\"",
+        "etymology": "Väster (west) + Göta (Geats) + land. The homeland of the western Götar (Geats) — the ancient tribe celebrated in the Old English epic Beowulf. Separated from Östergötland by Lake Vättern."
+    },
+    {
+        "id": "ostergotland",
+        "name": "Östergötland",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 216.8,
+        "cy": 693.0,
+        "path": "M 253.6,708.5 L 239.2,698.8 L 232.0,701.1 L 231.8,710.1 L 228.2,711.2 L 230.9,723.9 L 227.0,728.3 L 215.4,725.3 L 206.6,735.0 L 199.7,733.9 L 195.0,706.9 L 189.1,711.0 L 176.9,705.8 L 187.8,687.3 L 191.2,687.7 L 189.1,674.6 L 196.6,672.1 L 204.0,662.1 L 208.9,665.7 L 213.4,656.3 L 220.2,656.2 L 221.8,652.3 L 240.6,671.7 L 252.8,676.0 L 234.4,676.6 L 249.3,676.7 L 259.0,685.0 L 252.5,688.7 L 241.8,686.0 L 253.6,692.5 L 253.6,708.5 Z",
+        "meaning": "\"East Gothland\"",
+        "etymology": "From Old Norse Austrgautland — öster (east) + Göta (Geats) + land. The eastern homeland of the Götar tribe, sharing the same roots as Västergötland but on the opposite side of Lake Vättern."
+    },
+    {
+        "id": "bohuslan",
+        "name": "Bohuslän",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 85.9,
+        "cy": 688.6,
+        "path": "M 84.9,732.5 L 84.3,723.1 L 92.5,701.0 L 90.0,693.8 L 86.0,695.8 L 89.7,706.2 L 78.2,709.0 L 76.3,704.9 L 85.3,696.2 L 80.5,698.7 L 70.7,687.7 L 73.2,659.9 L 70.0,649.8 L 76.8,644.0 L 79.9,657.5 L 87.3,656.8 L 94.9,670.4 L 89.1,685.5 L 99.2,686.5 L 104.0,698.3 L 94.7,731.2 L 93.0,727.2 L 84.9,732.5 Z M 82.1,717.6 L 79.4,710.9 L 87.1,711.0 L 82.1,717.6 Z",
+        "meaning": "\"District of Bohus Fortress\"",
+        "etymology": "Named after the medieval fortress Bohus fästning (bo = dweller, hus = house/fortress). The province was the land belonging to and defended by this strategic fortress at the confluence of the Göta and Nordre rivers."
+    },
+    {
+        "id": "dalsland",
+        "name": "Dalsland",
+        "landsdel": "Götaland",
+        "landsdelskod": 1,
+        "color": "#2d6e45",
+        "cx": 104.4,
+        "cy": 662.0,
+        "path": "M 106.8,690.4 L 89.1,685.5 L 95.1,671.6 L 87.0,656.8 L 93.7,636.3 L 101.8,640.5 L 101.9,635.5 L 106.2,635.3 L 113.8,643.9 L 117.5,645.2 L 120.1,640.7 L 123.2,644.2 L 116.2,667.8 L 120.4,673.9 L 106.8,690.4 Z",
+        "meaning": "\"Valley Land\"",
+        "etymology": "From dal (valley) + land. The province is defined by deep, forested valleys and river gorges, alongside a patchwork of lakes — the geography directly inspired the name."
+    },
+    {
+        "id": "narke",
+        "name": "Närke",
+        "landsdel": "Svealand",
+        "landsdelskod": 2,
+        "color": "#264e7a",
+        "cx": 198.3,
+        "cy": 647.8,
+        "path": "M 196.6,672.1 L 188.2,675.8 L 180.3,654.9 L 172.6,654.6 L 173.3,636.5 L 176.2,640.9 L 186.1,639.1 L 187.8,629.5 L 193.2,629.6 L 196.7,624.0 L 213.6,630.5 L 219.2,628.2 L 223.0,633.5 L 217.5,655.1 L 208.9,665.7 L 204.0,662.1 L 196.6,672.1 Z",
+        "meaning": "\"The Narrow One\"",
+        "etymology": "From Old Swedish når or nar (narrow). The name likely describes a narrow ridge or geographic feature. Also associated with the ancient Njarar tribe — 'the people of the narrows.'"
+    },
+    {
+        "id": "sodermanland",
+        "name": "Södermanland",
+        "landsdel": "Svealand",
+        "landsdelskod": 2,
+        "color": "#264e7a",
+        "cx": 255.4,
+        "cy": 647.2,
+        "path": "M 240.6,671.7 L 222.6,652.5 L 219.4,656.6 L 215.5,652.6 L 226.1,627.8 L 248.3,623.3 L 255.5,628.9 L 249.3,623.4 L 253.6,622.1 L 269.3,630.5 L 267.7,636.2 L 272.0,636.8 L 270.6,632.0 L 284.4,635.5 L 298.3,630.2 L 301.9,642.7 L 292.9,648.8 L 289.3,660.4 L 281.0,641.4 L 279.1,661.7 L 269.3,668.8 L 261.5,668.2 L 265.3,671.3 L 261.8,675.3 L 240.6,671.7 Z M 267.8,629.0 L 261.4,623.9 L 267.7,624.6 L 267.8,629.0 Z",
+        "meaning": "\"Land of the Southern Men\"",
+        "etymology": "Söder (south) + man (men) + land. The södermän were the people living south of the Mälaren lake basin and Uppland — distinguished as the southern folk relative to the Svear core homeland."
+    },
+    {
+        "id": "varmland",
+        "name": "Värmland",
+        "landsdel": "Svealand",
+        "landsdelskod": 2,
+        "color": "#264e7a",
+        "cx": 138.0,
+        "cy": 602.4,
+        "path": "M 126.1,650.3 L 120.1,640.7 L 117.4,645.2 L 106.2,635.3 L 101.9,635.5 L 101.8,640.5 L 93.7,636.3 L 90.4,614.1 L 98.8,607.7 L 97.4,596.8 L 106.6,596.0 L 117.3,583.4 L 121.6,557.6 L 111.1,525.9 L 118.0,523.7 L 124.7,523.7 L 148.1,561.7 L 163.2,579.8 L 162.8,575.1 L 168.9,576.4 L 170.8,584.9 L 177.8,589.4 L 174.5,594.0 L 178.8,620.5 L 186.2,623.8 L 188.7,632.8 L 186.1,639.1 L 176.2,640.9 L 173.3,636.5 L 172.4,655.6 L 161.3,651.3 L 164.1,639.2 L 154.0,639.5 L 149.9,649.4 L 153.8,634.4 L 137.0,636.9 L 139.0,667.9 L 129.7,655.8 L 133.5,653.0 L 126.1,650.3 Z",
+        "meaning": "\"Land of the Warm-River Folk\"",
+        "etymology": "Named after the Värmar tribe. Their name likely derives from the river Värman (now Borgviksälven), known for swift, warm water that never froze. Varm means warm in Swedish."
+    },
+    {
+        "id": "vastmanland",
+        "name": "Västmanland",
+        "landsdel": "Svealand",
+        "landsdelskod": 2,
+        "color": "#264e7a",
+        "cx": 214.1,
+        "cy": 606.4,
+        "path": "M 227.9,622.4 L 231.1,625.5 L 219.9,641.1 L 222.9,632.4 L 218.2,627.9 L 213.6,630.5 L 196.7,624.0 L 188.1,631.2 L 186.2,623.8 L 178.8,620.5 L 174.5,593.9 L 177.8,589.4 L 187.7,591.2 L 189.4,584.1 L 195.7,584.6 L 208.7,600.1 L 212.1,593.7 L 216.8,594.8 L 220.4,579.8 L 227.4,579.4 L 235.8,586.4 L 248.6,578.1 L 246.5,596.6 L 256.4,617.9 L 244.3,614.9 L 242.8,621.7 L 227.9,622.4 Z",
+        "meaning": "\"Land of the Western Men\"",
+        "etymology": "Väster (west) + man (men) + land. The västmän were the people living west of the Uppland heartland — the western counterpart to those of the Svear core lands around Lake Mälaren."
+    },
+    {
+        "id": "uppland",
+        "name": "Uppland",
+        "landsdel": "Svealand",
+        "landsdelskod": 2,
+        "color": "#264e7a",
+        "cx": 283.1,
+        "cy": 592.2,
+        "path": "M 256.4,617.9 L 246.5,596.6 L 248.6,578.1 L 263.6,571.1 L 268.2,550.2 L 275.7,549.9 L 279.8,558.5 L 286.2,551.6 L 295.6,567.9 L 301.9,566.7 L 307.7,573.1 L 298.4,568.8 L 302.1,576.6 L 314.7,581.6 L 323.4,594.0 L 323.3,598.2 L 319.3,595.5 L 317.3,600.1 L 324.2,603.3 L 313.9,607.2 L 311.1,614.1 L 299.6,621.3 L 301.8,626.4 L 294.7,623.0 L 294.3,630.4 L 283.7,626.7 L 285.9,618.3 L 281.5,610.4 L 277.5,611.0 L 277.4,608.0 L 276.5,610.2 L 284.0,618.2 L 282.5,624.1 L 270.9,611.3 L 272.2,622.9 L 256.4,617.9 Z M 277.4,606.6 L 277.2,601.5 L 272.8,609.9 L 276.2,616.2 L 274.9,607.9 L 277.4,606.6 Z M 309.4,622.5 L 308.9,617.6 L 314.5,616.2 L 309.4,622.5 Z M 300.3,632.4 L 300.5,628.0 L 306.5,629.8 L 304.9,623.7 L 312.2,630.5 L 300.3,632.4 Z M 306.3,568.8 L 300.9,565.5 L 299.8,556.8 L 306.3,568.8 Z M 285.7,634.3 L 279.4,632.9 L 275.9,625.6 L 285.7,634.3 Z",
+        "meaning": "\"The Up-Land\"",
+        "etymology": "Upp (up/upper) + land. The heartland and cradle of ancient Sweden — Uppsala, the sacred royal city, lies here. The name reflects both geographic elevation and supreme political status as the Svear kingdom's core."
+    },
+    {
+        "id": "gastrikland",
+        "name": "Gästrikland",
+        "landsdel": "Norrland",
+        "landsdelskod": 3,
+        "color": "#6b3522",
+        "cx": 250.2,
+        "cy": 548.5,
+        "path": "M 263.6,571.1 L 248.6,578.1 L 231.5,555.6 L 237.9,541.3 L 229.8,528.6 L 235.1,524.9 L 261.1,523.9 L 268.2,550.2 L 263.6,571.1 Z",
+        "meaning": "\"Land of the Guests\"",
+        "etymology": "First recorded in 1253 as Gestrikalandia. Likely from gäst (guest/stranger) — referring to settlers or newcomers (gästar) who moved into the territory from elsewhere. Acts as a gateway to the north."
+    },
+    {
+        "id": "dalarna",
+        "name": "Dalarna",
+        "landsdel": "Svealand",
+        "landsdelskod": 2,
+        "color": "#264e7a",
+        "cx": 176.5,
+        "cy": 529.9,
+        "path": "M 229.3,581.7 L 218.1,581.8 L 217.9,592.9 L 212.1,593.7 L 208.7,600.1 L 196.0,584.8 L 189.4,584.1 L 187.7,591.2 L 170.8,584.9 L 168.9,576.4 L 162.8,575.1 L 163.2,579.8 L 125.5,527.3 L 131.4,505.1 L 110.4,481.2 L 116.6,447.4 L 131.3,450.9 L 141.3,463.8 L 145.1,461.5 L 148.1,465.2 L 142.3,469.5 L 152.5,487.7 L 177.4,493.0 L 186.2,472.0 L 218.6,525.2 L 229.8,528.6 L 237.9,541.3 L 230.4,552.5 L 248.6,578.1 L 235.8,586.4 L 229.3,581.7 Z",
+        "meaning": "\"The Valleys\"",
+        "etymology": "Dalarna is simply the plural of dal (valley). The province is sculpted by the great river valleys of the Österdalälven and Västerdalälven. The Dala horse — Sweden's most iconic folk art — originates here."
+    },
+    {
+        "id": "halsingland",
+        "name": "Hälsingland",
+        "landsdel": "Norrland",
+        "landsdelskod": 3,
+        "color": "#6b3522",
+        "cx": 229.0,
+        "cy": 483.1,
+        "path": "M 235.1,524.9 L 229.8,528.6 L 218.6,525.2 L 186.5,473.3 L 187.8,454.2 L 193.7,445.8 L 199.9,450.2 L 213.3,444.2 L 268.3,455.8 L 264.6,476.0 L 269.9,487.2 L 259.3,482.2 L 263.0,484.5 L 258.0,489.7 L 262.1,499.6 L 258.6,502.6 L 262.0,506.9 L 261.1,523.9 L 235.1,524.9 Z",
+        "meaning": "\"Land of the Neck-Dwellers\"",
+        "etymology": "Named after the Hälsingar tribe, whose name links to hals (neck/strait). The people living by the narrow coastal straits. Fascinatingly, 'Hälsingar' is also the etymological root of Helsinki."
+    },
+    {
+        "id": "harjedalen",
+        "name": "Härjedalen",
+        "landsdel": "Norrland",
+        "landsdelskod": 3,
+        "color": "#6b3522",
+        "cx": 150.9,
+        "cy": 446.2,
+        "path": "M 175.0,445.0 L 182.5,448.2 L 189.7,440.5 L 193.7,445.8 L 187.8,454.2 L 189.6,466.1 L 181.3,479.3 L 180.5,489.2 L 177.4,493.0 L 152.5,487.7 L 142.3,469.5 L 148.1,465.2 L 145.1,461.5 L 141.3,463.8 L 131.3,450.9 L 116.6,447.4 L 110.5,425.6 L 111.9,407.4 L 147.0,404.9 L 154.4,415.8 L 150.2,417.7 L 152.2,420.6 L 161.3,420.7 L 175.0,445.0 Z",
+        "meaning": "\"Valley of the Härje River\"",
+        "etymology": "Härje (from the river Härjeån, meaning 'lord's river') + dalen (the valley). A geographic name: the dramatic valley carved by the Härje river through alpine terrain."
+    },
+    {
+        "id": "medelpad",
+        "name": "Medelpad",
+        "landsdel": "Norrland",
+        "landsdelskod": 3,
+        "color": "#6b3522",
+        "cx": 236.2,
+        "cy": 433.5,
+        "path": "M 199.1,430.8 L 223.2,421.0 L 234.8,421.8 L 243.1,407.8 L 252.4,405.6 L 275.0,432.4 L 271.4,437.1 L 265.5,430.9 L 262.8,434.5 L 264.6,444.2 L 273.0,449.8 L 268.7,450.1 L 268.3,455.8 L 213.3,444.2 L 199.9,450.2 L 189.7,440.5 L 189.1,428.8 L 199.1,430.8 Z",
+        "meaning": "\"Middle Path\"",
+        "etymology": "From medel (middle) + pad (path/way). The province sits between the rivers Ljungan and Indalsälven — two great waterways used as ancient travel routes. A land literally lying 'between the paths.'"
+    },
+    {
+        "id": "angermanland",
+        "name": "Ångermanland",
+        "landsdel": "Norrland",
+        "landsdelskod": 3,
+        "color": "#6b3522",
+        "cx": 269.6,
+        "cy": 368.5,
+        "path": "M 222.5,375.2 L 223.3,368.5 L 217.5,361.9 L 223.0,357.7 L 219.2,351.4 L 221.7,336.3 L 203.5,312.7 L 205.7,307.8 L 209.4,307.1 L 211.1,312.7 L 214.4,306.8 L 215.5,315.1 L 223.2,319.5 L 223.8,324.7 L 228.6,323.7 L 247.2,342.9 L 270.9,346.5 L 306.5,328.2 L 314.5,332.1 L 327.8,352.0 L 329.1,369.6 L 326.3,371.4 L 319.1,364.5 L 320.8,370.4 L 315.6,370.4 L 311.4,386.6 L 305.1,382.7 L 305.6,387.8 L 300.6,387.2 L 289.1,401.0 L 297.1,402.0 L 294.6,409.4 L 285.1,415.7 L 272.4,401.9 L 281.5,418.1 L 281.6,422.9 L 278.3,422.7 L 283.4,426.1 L 277.3,433.8 L 222.5,375.2 Z",
+        "meaning": "\"Land of the Narrow Fjords\"",
+        "etymology": "From Old Norse angr (narrow bay, fjord, inlet) + man (people) + land. The spectacular river gorges and fjord-like inlets of the Ångerman River carve this province's dramatic landscape."
+    },
+    {
+        "id": "jamtland",
+        "name": "Jämtland",
+        "landsdel": "Norrland",
+        "landsdelskod": 3,
+        "color": "#6b3522",
+        "cx": 179.4,
+        "cy": 370.4,
+        "path": "M 189.1,428.8 L 189.7,440.5 L 182.5,448.2 L 176.2,446.7 L 161.3,420.7 L 152.2,420.6 L 150.2,417.7 L 154.4,415.8 L 147.0,404.9 L 111.9,407.4 L 116.3,401.5 L 110.1,384.3 L 117.4,371.5 L 116.0,364.3 L 131.6,341.5 L 146.9,334.1 L 167.6,339.2 L 172.4,328.8 L 171.6,310.9 L 159.4,303.7 L 177.6,270.4 L 209.4,307.1 L 203.5,312.7 L 221.7,336.3 L 219.2,351.4 L 223.0,357.7 L 217.5,361.9 L 223.3,368.5 L 222.5,375.2 L 252.4,405.6 L 243.1,407.8 L 234.8,421.8 L 223.2,421.0 L 199.1,430.8 L 189.1,428.8 Z",
+        "meaning": "\"Land of the Jämtar People\"",
+        "etymology": "Named after the Jämtar tribe. Their name may derive from an Old Norse word for endurance or tenacity — fitting for the mountain folk who survived the harsh Scandinavian interior."
+    },
+    {
+        "id": "vasterbotten",
+        "name": "Västerbotten",
+        "landsdel": "Norrland",
+        "landsdelskod": 3,
+        "color": "#6b3522",
+        "cx": 335.0,
+        "cy": 301.2,
+        "path": "M 328.4,365.5 L 327.8,352.0 L 305.5,323.1 L 302.9,310.4 L 310.5,286.2 L 295.0,275.9 L 316.6,261.1 L 323.2,249.1 L 368.8,265.4 L 356.3,281.2 L 363.7,284.2 L 364.5,290.7 L 359.4,290.0 L 371.8,297.9 L 373.4,303.8 L 358.2,324.2 L 354.7,341.8 L 347.5,345.1 L 345.1,354.7 L 331.9,359.8 L 328.4,365.5 Z",
+        "meaning": "\"West Bothnian Region\"",
+        "etymology": "Väster (west) + Botten (bottom of the bay). 'Botten' refers to the Gulf of Bothnia — the northernmost, deepest extension of the Baltic Sea. This is the western shore of that bay."
+    },
+    {
+        "id": "lappland",
+        "name": "Lappland",
+        "landsdel": "Norrland",
+        "landsdelskod": 3,
+        "color": "#6b3522",
+        "cx": 280.6,
+        "cy": 187.0,
+        "path": "M 309.0,328.7 L 270.9,346.5 L 247.2,342.9 L 228.6,323.7 L 223.8,324.7 L 223.2,319.5 L 215.5,315.1 L 214.4,306.8 L 211.1,312.7 L 201.9,300.8 L 204.4,298.6 L 177.6,270.4 L 186.1,226.1 L 183.2,206.9 L 196.1,205.9 L 207.7,197.5 L 204.9,184.9 L 229.4,149.4 L 229.6,139.4 L 222.0,125.7 L 231.2,114.9 L 236.2,95.7 L 248.6,83.3 L 263.3,91.8 L 269.0,77.7 L 267.1,56.1 L 286.3,56.5 L 309.7,64.2 L 315.5,54.1 L 309.3,51.0 L 316.7,35.4 L 309.7,19.9 L 319.8,18.0 L 357.2,50.6 L 375.8,54.2 L 388.1,68.1 L 379.9,88.4 L 372.4,95.2 L 361.1,126.5 L 372.1,147.4 L 368.3,163.7 L 373.3,176.5 L 353.5,189.9 L 345.9,183.4 L 340.5,186.2 L 326.4,219.5 L 330.7,236.9 L 326.0,241.2 L 317.4,240.4 L 316.0,245.2 L 323.2,249.1 L 318.8,257.5 L 295.0,275.9 L 310.5,286.2 L 302.9,310.4 L 309.0,328.7 Z",
+        "meaning": "\"Land of the Sámi People\"",
+        "etymology": "From Lapp (historical Swedish term for the Sámi indigenous people) + land. The vast wilderness of Swedish Lapland is the ancient homeland of the Sámi — reindeer herders of the Arctic with a culture stretching back millennia."
+    },
+    {
+        "id": "norrbotten",
+        "name": "Norrbotten",
+        "landsdel": "Norrland",
+        "landsdelskod": 3,
+        "color": "#6b3522",
+        "cx": 377.1,
+        "cy": 180.4,
+        "path": "M 368.8,265.4 L 316.0,245.2 L 317.4,240.4 L 326.0,241.2 L 330.7,236.9 L 326.4,219.5 L 340.5,186.2 L 345.9,183.4 L 353.5,189.9 L 373.3,176.5 L 368.3,163.7 L 372.1,147.4 L 361.1,126.5 L 372.4,95.2 L 379.9,88.4 L 388.1,68.1 L 399.0,79.3 L 395.5,84.4 L 396.6,108.6 L 405.7,111.3 L 403.0,127.6 L 416.9,148.0 L 412.8,181.3 L 430.0,209.7 L 424.8,214.2 L 407.1,213.8 L 403.6,220.7 L 390.8,209.3 L 392.4,218.8 L 387.0,213.2 L 383.3,215.0 L 382.7,227.5 L 386.2,227.3 L 387.5,233.1 L 369.7,223.3 L 382.0,233.1 L 373.2,235.0 L 378.3,238.7 L 376.1,243.0 L 364.3,245.0 L 370.0,253.4 L 359.1,248.6 L 369.4,258.6 L 368.8,265.4 Z",
+        "meaning": "\"North Bothnian Region\"",
+        "etymology": "Norr (north) + Botten (bottom of the bay). The northernmost Swedish province — at the very top of the Gulf of Bothnia. Larger than many European countries, it borders both Norway and Finland."
+    }
+];
+
+const REGIONS = {
+  1: {label:'Götaland',cls:'rg1',dot:'#2d6e45'},
+  2: {label:'Svealand', cls:'rg2',dot:'#264e7a'},
+  3: {label:'Norrland', cls:'rg3',dot:'#6b3522'}
+};
+
+let sel=null, sc=1, tx=0, ty=0, drag=false, ds={x:0,y:0};
+const pg=document.getElementById('pg');
+const svg=document.getElementById('map');
+
+PROVS.forEach(p=>{
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d',p.path);
+  path.setAttribute('fill',p.color);
+  path.setAttribute('id','p-'+p.id);
+  path.classList.add('prov');
+  path.dataset.id=p.id;
+  const txt=document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x',p.cx); txt.setAttribute('y',p.cy);
+  txt.classList.add('plbl');
+  txt.textContent=p.name;
+  pg.appendChild(path); pg.appendChild(txt);
+  path.addEventListener('mouseenter',e=>showTT(e,p));
+  path.addEventListener('mousemove',moveTT);
+  path.addEventListener('mouseleave',hideTT);
+  path.addEventListener('click',()=>selP(p.id));
+});
+
+const pl=document.getElementById('pl');
+const srch=document.getElementById('srch');
+function renderList(q=''){
+  pl.innerHTML='';
+  const lq=q.toLowerCase();
+  PROVS.filter(p=>p.name.toLowerCase().includes(lq)||p.meaning.toLowerCase().includes(lq))
+    .forEach(p=>{
+      const li=document.createElement('li');
+      if(p.id===sel)li.classList.add('sel');
+      const dot=document.createElement('span'); dot.className='ldot';
+      dot.style.background=REGIONS[p.landsdelskod].dot;
+      const nm=document.createElement('span'); nm.textContent=p.name;
+      const mn=document.createElement('span'); mn.className='lmean';
+      mn.textContent=p.meaning.replace(/"/g,'');
+      li.append(dot,nm,mn);
+      li.addEventListener('click',()=>selP(p.id));
+      pl.appendChild(li);
+    });
+}
+srch.addEventListener('input',()=>renderList(srch.value));
+renderList();
+
+function selP(id){
+  sel=id;
+  const p=PROVS.find(x=>x.id===id); if(!p)return;
+  PROVS.forEach(pv=>{
+    const el=document.getElementById('p-'+pv.id);
+    el.classList.remove('active','dim');
+    el.classList.add(pv.id===id?'active':'dim');
+  });
+  const dc=document.getElementById('dc');
+  dc.classList.add('on');
+  document.getElementById('ph').style.display='none';
+  document.getElementById('di').style.display='block';
+  document.getElementById('dn').textContent=p.name;
+  const rt=document.getElementById('dr');
+  const rm=REGIONS[p.landsdelskod];
+  rt.textContent=rm.label; rt.className='rtag '+rm.cls;
+  document.getElementById('dm').textContent=p.meaning;
+  document.getElementById('de').textContent=p.etymology;
+  renderList(srch.value);
+  const li=pl.querySelector(`[data-id="${id}"]`);
+  // find correct li by checking its text
+  [...pl.querySelectorAll('li')].forEach(l=>{
+    if(l.querySelector('span:nth-child(2)')?.textContent===p.name)
+      l.scrollIntoView({block:'nearest',behavior:'smooth'});
+  });
+}
+
+const tt=document.getElementById('tt');
+function showTT(e,p){
+  document.getElementById('ttn').textContent=p.name;
+  document.getElementById('ttm').textContent=p.meaning;
+  tt.classList.add('on'); moveTT(e);
+}
+function moveTT(e){
+  const x=e.clientX+14,y=e.clientY-10;
+  tt.style.left=Math.min(x,window.innerWidth-tt.offsetWidth-8)+'px';
+  tt.style.top=Math.max(y,8)+'px';
+}
+function hideTT(){tt.classList.remove('on');}
+
+function applyT(){pg.setAttribute('transform',`translate(${tx},${ty}) scale(${sc})`);}
+document.getElementById('zi').onclick=()=>{sc=Math.min(sc*1.3,10);applyT();};
+document.getElementById('zo').onclick=()=>{sc=Math.max(sc/1.3,.3);applyT();};
+document.getElementById('zr').onclick=()=>{sc=1;tx=0;ty=0;applyT();};
+
+svg.addEventListener('mousedown',e=>{
+  if(e.target.classList.contains('prov'))return;
+  drag=true; ds={x:e.clientX-tx,y:e.clientY-ty};
+});
+window.addEventListener('mousemove',e=>{if(!drag)return;tx=e.clientX-ds.x;ty=e.clientY-ds.y;applyT();});
+window.addEventListener('mouseup',()=>{drag=false;});
+
+svg.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const d=e.deltaY<0?1.15:.87;
+  const rect=svg.getBoundingClientRect();
+  const [vx,vy,vw,vh]=[0,0,500,900];
+  const mx=(e.clientX-rect.left)/rect.width*vw;
+  const my=(e.clientY-rect.top)/rect.height*vh;
+  sc=Math.min(Math.max(sc*d,.3),10);
+  tx=mx-(mx-tx)*d; ty=my-(my-ty)*d; applyT();
+},{passive:false});
+
+let ltd=null;
+svg.addEventListener('touchstart',e=>{
+  if(e.touches.length===2)
+    ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+});
+svg.addEventListener('touchmove',e=>{
+  if(e.touches.length===2&&ltd){
+    e.preventDefault();
+    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    sc=Math.min(Math.max(sc*d/ltd,.3),10); applyT(); ltd=d;
+  }
+},{passive:false});
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Python / generated files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Large geodata intermediaries (keep geojson, skip big raw downloads)
+geodata/sweden_country.json
+geodata/sweden_counties.json
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
