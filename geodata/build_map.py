@@ -114,9 +114,9 @@ html = f"""<!DOCTYPE html>
   <style>
     *,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
     :root{{
-      --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
-      --accent:#58a6ff;--accent2:#79c0ff;--gold:#e3b341;
-      --text:#e6edf3;--muted:#8b949e;
+      --bg:#f5f4f0;--surface:#ffffff;--surface2:#f0ede8;--border:#ddd8d0;
+      --accent:#2563eb;--accent2:#3b82f6;--gold:#b45309;
+      --text:#1a1a2e;--muted:#6b7280;
     }}
     body{{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}}
 
@@ -125,7 +125,7 @@ html = f"""<!DOCTYPE html>
       background:linear-gradient(90deg,var(--accent),var(--gold));
       margin:.7rem auto 0;border-radius:2px}}
     h1{{font-family:'Playfair Display',serif;font-size:clamp(1.7rem,3.5vw,2.6rem);
-      background:linear-gradient(135deg,#e6edf3 30%,var(--gold) 100%);
+      background:linear-gradient(135deg,#1a1a2e 30%,var(--gold) 100%);
       -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}}
     .sub{{font-size:.92rem;color:var(--muted);margin-top:.3rem;font-weight:300}}
 
@@ -158,20 +158,21 @@ html = f"""<!DOCTYPE html>
     .zb:hover{{border-color:var(--accent)}}
 
     .hint{{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
-      font-size:.72rem;color:var(--muted);background:rgba(13,17,23,.85);
+      font-size:.72rem;color:#4b5563;background:rgba(255,255,255,.9);
       padding:.22rem .7rem;border-radius:20px;border:1px solid var(--border);
-      white-space:nowrap;pointer-events:none}}
+      white-space:nowrap;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.1)}}
 
     /* Provinces */
-    .prov{{cursor:pointer;stroke:rgba(255,255,255,.12);stroke-width:.4;
+    .prov{{cursor:pointer;stroke:rgba(255,255,255,.55);stroke-width:.5;
       transition:filter .18s,opacity .18s}}
-    .prov:hover{{filter:brightness(1.4) drop-shadow(0 0 5px rgba(88,166,255,.6));
-      stroke:rgba(121,192,255,.85);stroke-width:.7}}
-    .prov.active{{filter:brightness(1.55) drop-shadow(0 0 8px rgba(227,179,65,.85));
-      stroke:var(--gold)!important;stroke-width:1!important}}
-    .prov.dim{{opacity:.38}}
-    .plbl{{font-family:'Outfit',sans-serif;font-size:6px;fill:rgba(255,255,255,.6);
-      text-anchor:middle;dominant-baseline:middle;pointer-events:none;user-select:none}}
+    .prov:hover{{filter:brightness(1.12) drop-shadow(0 2px 8px rgba(37,99,235,.35));
+      stroke:rgba(255,255,255,.9);stroke-width:.8}}
+    .prov.active{{filter:brightness(1.18) drop-shadow(0 3px 12px rgba(180,83,9,.5));
+      stroke:#fff!important;stroke-width:1.2!important}}
+    .prov.dim{{opacity:.35}}
+    .plbl{{font-family:'Outfit',sans-serif;font-size:6px;fill:rgba(255,255,255,.85);
+      text-anchor:middle;dominant-baseline:middle;pointer-events:none;user-select:none;
+      font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.4)}}
 
     /* SIDEBAR */
     .sidebar{{display:flex;flex-direction:column;gap:1rem}}
@@ -182,7 +183,7 @@ html = f"""<!DOCTYPE html>
       transform:scaleX(0);transform-origin:left;transition:transform .4s;
       border-radius:16px 16px 0 0}}
     .dcard.on::before{{transform:scaleX(1)}}
-    .dcard.on{{border-color:rgba(88,166,255,.25)}}
+    .dcard.on{{border-color:rgba(37,99,235,.25)}}
 
     .ph{{display:flex;flex-direction:column;align-items:center;justify-content:center;
       height:100%;gap:.7rem;color:var(--muted);text-align:center}}
@@ -192,9 +193,9 @@ html = f"""<!DOCTYPE html>
     .pname{{font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--text);margin-bottom:.18rem}}
     .rtag{{display:inline-block;font-size:.68rem;font-weight:600;letter-spacing:.8px;
       text-transform:uppercase;padding:.16rem .6rem;border-radius:20px;margin-bottom:.85rem}}
-    .rg1{{background:rgba(45,110,69,.35);color:#6fcf97;border:1px solid rgba(45,110,69,.6)}}
-    .rg2{{background:rgba(38,78,122,.35);color:#79c0ff;border:1px solid rgba(38,78,122,.6)}}
-    .rg3{{background:rgba(107,53,34,.35);color:#ffab70;border:1px solid rgba(107,53,34,.6)}}
+    .rg1{{background:rgba(22,101,52,.12);color:#166534;border:1px solid rgba(22,101,52,.35)}}
+    .rg2{{background:rgba(30,64,175,.12);color:#1e40af;border:1px solid rgba(30,64,175,.35)}}
+    .rg3{{background:rgba(154,52,18,.12);color:#9a3412;border:1px solid rgba(154,52,18,.35)}}
 
     .mblk{{background:var(--surface2);border-radius:9px;padding:.85rem 1rem;
       margin:.65rem 0;border-left:3px solid var(--gold)}}
@@ -202,7 +203,7 @@ html = f"""<!DOCTYPE html>
     .mv{{font-size:1.15rem;font-family:'Playfair Display',serif;font-style:italic;color:var(--text)}}
     .etl{{font-size:.67rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600;
       margin:.75rem 0 .3rem}}
-    .ete{{font-size:.84rem;color:#c9d1d9;line-height:1.65}}
+    .ete{{font-size:.84rem;color:#374151;line-height:1.65}}
 
     /* List */
     .lcard{{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:.85rem;flex:1}}
@@ -218,18 +219,18 @@ html = f"""<!DOCTYPE html>
     .plist li{{display:flex;align-items:center;gap:.5rem;padding:.38rem .42rem;
       border-radius:7px;cursor:pointer;font-size:.81rem;transition:background .12s}}
     .plist li:hover{{background:var(--surface2)}}
-    .plist li.sel{{background:rgba(88,166,255,.1);color:var(--accent2)}}
+    .plist li.sel{{background:rgba(37,99,235,.1);color:var(--accent)}}
     .ldot{{width:8px;height:8px;border-radius:50%;flex-shrink:0}}
     .lmean{{font-size:.69rem;color:var(--muted);margin-left:auto;max-width:125px;
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}}
 
     /* Tooltip */
-    #tt{{position:fixed;background:rgba(22,27,34,.96);border:1px solid var(--accent);
+    #tt{{position:fixed;background:rgba(255,255,255,.97);border:1px solid #d1d5db;
       border-radius:10px;padding:.52rem .88rem;pointer-events:none;z-index:9999;
       opacity:0;transform:translateY(4px);transition:opacity .14s,transform .14s;
-      max-width:205px;backdrop-filter:blur(8px)}}
+      max-width:205px;backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,.12)}}
     #tt.on{{opacity:1;transform:translateY(0)}}
-    .tn{{font-weight:600;font-size:.9rem;color:var(--text)}}
+    .tn{{font-weight:600;font-size:.9rem;color:#111827}}
     .tm{{font-size:.78rem;color:var(--gold);font-style:italic;margin-top:.07rem}}
 
     /* Data credit */
@@ -244,9 +245,9 @@ html = f"""<!DOCTYPE html>
   <p class="sub">Hover or click a province to reveal the literal meaning of its name</p>
 </header>
 <div class="legend">
-  <div class="li"><div class="ld" style="background:#2d6e45"></div>Götaland — Land of the Geats</div>
-  <div class="li"><div class="ld" style="background:#264e7a"></div>Svealand — Land of the Svear</div>
-  <div class="li"><div class="ld" style="background:#6b3522"></div>Norrland — Northern Land</div>
+  <div class="li"><div class="ld" style="background:#2d7d4f"></div>Götaland — Land of the Geats</div>
+  <div class="li"><div class="ld" style="background:#2555a0"></div>Svealand — Land of the Svear</div>
+  <div class="li"><div class="ld" style="background:#a04020"></div>Norrland — Northern Land</div>
 </div>
 <div class="stats">
   <div class="stat"><strong>25</strong>Provinces</div>
@@ -263,8 +264,8 @@ html = f"""<!DOCTYPE html>
     <svg id="map" viewBox="{viewBox}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <radialGradient id="bg" cx="50%" cy="50%" r="70%">
-          <stop offset="0%" stop-color="#1a2235"/>
-          <stop offset="100%" stop-color="#0d1117"/>
+          <stop offset="0%" stop-color="#dde8f0"/>
+          <stop offset="100%" stop-color="#c8d8e8"/>
         </radialGradient>
       </defs>
       <rect width="500" height="900" fill="url(#bg)"/>
