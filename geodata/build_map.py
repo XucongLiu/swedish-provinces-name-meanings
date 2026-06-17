@@ -67,9 +67,9 @@ ETYMOLOGY = {
 
 # ─── Region colors ────────────────────────────────────────────────────────────
 REGION_COLORS = {
-    1: {"base": "#2d6e45", "hover": "#3d8e5a"},   # Götaland — green
-    2: {"base": "#264e7a", "hover": "#3665a0"},   # Svealand  — blue
-    3: {"base": "#6b3522", "hover": "#8b4530"},   # Norrland  — warm brown
+    1: {"base": "#2d7d4f", "hover": "#3a9e63"},   # Götaland — rich forest green
+    2: {"base": "#2555a0", "hover": "#3068c0"},   # Svealand  — deep royal blue
+    3: {"base": "#a04020", "hover": "#c05530"},   # Norrland  — warm amber-brown
 }
 
 # ─── Load paths ───────────────────────────────────────────────────────────────
